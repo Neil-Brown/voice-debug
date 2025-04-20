@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Speech Synthesis Debug</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    label, select, button { display: block; margin: 1rem 0; }
+    #log { white-space: pre-wrap; background: #eee; padding: 1rem; border-radius: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>🔊 Voice Debug Tool</h1>
+
+  <label for="voiceSelect">Choose a voice:</label>
+  <select id="voiceSelect"></select>
+
+  <button id="speakButton">Speak Test</button>
+
+  <div id="log">Log will appear here...</div>
+
+  <script>
+    const voiceSelect = document.getElementById('voiceSelect');
+    const log = document.getElementById('log');
+    const speakButton = document.getElementById('speakButton');
+
+    const logMessage = (msg) => {
+      log.textContent += '\n' + msg;
+    };
+
+    const populateVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      voiceSelect.innerHTML = '';
+      voices.forEach((voice, i) => {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' [default]' : ''}`;
+        voiceSelect.appendChild(option);
+      });
+
+      if (voices.length === 0) {
+        logMessage('❌ No voices found.');
+      } else {
+        logMessage(`✅ ${voices.length} voices loaded.`);
+      }
+    };
+
+    // Some browsers need voices to be loaded asynchronously
+    speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices();
+
+    speakButton.addEventListener('click', () => {
+      const voices = speechSynthesis.getVoices();
+      const selectedVoice = voices[voiceSelect.value];
+      if (!selectedVoice) {
+        logMessage('⚠️ No voice selected or found.');
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance("Hello! This is a test.");
+      utterance.voice = selectedVoice;
+      utterance.lang = selectedVoice.lang;
+
+      logMessage(`🔈 Speaking with: ${selectedVoice.name} (${selectedVoice.lang})`);
+
+      speechSynthesis.cancel(); // Cancel any previous speech
+      speechSynthesis.speak(utterance);
+    });
+  </script>
+</body>
+</html>
