@@ -39,8 +39,8 @@
 
     const populateVoices = () => {
       const voices = speechSynthesis.getVoices();
-      if (!voices.length) {
-        logMessage('❌ No voices found yet...');
+      if (!voices || voices.length === 0) {
+        logMessage('❌ Voices still not loaded.');
         return;
       }
       voiceSelect.innerHTML = '';
@@ -56,25 +56,25 @@
 
     // Start only after user interaction
     startButton.addEventListener('click', () => {
-  controls.style.display = 'block';
-  startButton.style.display = 'none';
+      controls.style.display = 'block';
+      startButton.style.display = 'none';
 
-  // Manually trigger getVoices
-  populateVoices();
-
-  // Try again after a delay in case voices load late
-  setTimeout(() => {
-    if (!voicesLoaded) {
+      // Manually trigger getVoices
       populateVoices();
-    }
-  }, 1000);
 
-  // Listen for voiceschanged (some browsers do fire it)
-  speechSynthesis.onvoiceschanged = () => {
-    populateVoices();
-  };
-});
+      // Retry voice loading after a delay in case it didn't load immediately
+      setTimeout(() => {
+        if (!voicesLoaded) {
+          logMessage('⏳ Retrying voice load...');
+          populateVoices();
+        }
+      }, 1000); // 1-second retry
 
+      // Listen for voiceschanged (for browsers that do trigger it)
+      speechSynthesis.onvoiceschanged = () => {
+        populateVoices();
+      };
+    });
 
     speakButton.addEventListener('click', () => {
       const voices = speechSynthesis.getVoices();
