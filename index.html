@@ -56,14 +56,25 @@
 
     // Start only after user interaction
     startButton.addEventListener('click', () => {
-      controls.style.display = 'block';
-      startButton.style.display = 'none';
+  controls.style.display = 'block';
+  startButton.style.display = 'none';
 
-      // Trigger speechSynthesis to ensure voice loading
-      speechSynthesis.getVoices();
-      speechSynthesis.onvoiceschanged = populateVoices;
-      setTimeout(populateVoices, 100); // fallback if event doesn’t fire
-    });
+  // Manually trigger getVoices
+  populateVoices();
+
+  // Try again after a delay in case voices load late
+  setTimeout(() => {
+    if (!voicesLoaded) {
+      populateVoices();
+    }
+  }, 1000);
+
+  // Listen for voiceschanged (some browsers do fire it)
+  speechSynthesis.onvoiceschanged = () => {
+    populateVoices();
+  };
+});
+
 
     speakButton.addEventListener('click', () => {
       const voices = speechSynthesis.getVoices();
