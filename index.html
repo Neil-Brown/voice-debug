@@ -7,15 +7,20 @@
     body { font-family: sans-serif; padding: 2rem; }
     label, select, button { display: block; margin: 1rem 0; }
     #log { white-space: pre-wrap; background: #eee; padding: 1rem; border-radius: 0.5rem; }
+    #controls { display: none; }
   </style>
 </head>
 <body>
   <h1>🔊 Voice Debug Tool</h1>
 
-  <label for="voiceSelect">Choose a voice:</label>
-  <select id="voiceSelect"></select>
+  <button id="startButton">🔓 Start Voice Test</button>
 
-  <button id="speakButton">Speak Test</button>
+  <div id="controls">
+    <label for="voiceSelect">Choose a voice:</label>
+    <select id="voiceSelect"></select>
+
+    <button id="speakButton">🔈 Speak Test</button>
+  </div>
 
   <div id="log">Log will appear here...</div>
 
@@ -23,13 +28,21 @@
     const voiceSelect = document.getElementById('voiceSelect');
     const log = document.getElementById('log');
     const speakButton = document.getElementById('speakButton');
+    const startButton = document.getElementById('startButton');
+    const controls = document.getElementById('controls');
 
     const logMessage = (msg) => {
       log.textContent += '\n' + msg;
     };
 
+    let voicesLoaded = false;
+
     const populateVoices = () => {
       const voices = speechSynthesis.getVoices();
+      if (!voices.length) {
+        logMessage('❌ No voices found yet...');
+        return;
+      }
       voiceSelect.innerHTML = '';
       voices.forEach((voice, i) => {
         const option = document.createElement('option');
@@ -37,17 +50,20 @@
         option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' [default]' : ''}`;
         voiceSelect.appendChild(option);
       });
-
-      if (voices.length === 0) {
-        logMessage('❌ No voices found.');
-      } else {
-        logMessage(`✅ ${voices.length} voices loaded.`);
-      }
+      logMessage(`✅ Loaded ${voices.length} voices.`);
+      voicesLoaded = true;
     };
 
-    // Some browsers need voices to be loaded asynchronously
-    speechSynthesis.onvoiceschanged = populateVoices;
-    populateVoices();
+    // Start only after user interaction
+    startButton.addEventListener('click', () => {
+      controls.style.display = 'block';
+      startButton.style.display = 'none';
+
+      // Trigger speechSynthesis to ensure voice loading
+      speechSynthesis.getVoices();
+      speechSynthesis.onvoiceschanged = populateVoices;
+      setTimeout(populateVoices, 100); // fallback if event doesn’t fire
+    });
 
     speakButton.addEventListener('click', () => {
       const voices = speechSynthesis.getVoices();
